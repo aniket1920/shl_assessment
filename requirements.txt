@@ -6,8 +6,6 @@ requests
 beautifulsoup4
 lxml
 python-dotenv
-sentence-transformers
-faiss-cpu
 langchain
 langchain-community
 langchain-core
@@ -19,4 +17,3 @@ scikit-learn
 rank-bm25
 orjson
 streamlit
-ollama
