@@ -1,75 +1,88 @@
-import ollama
+import os
 
-from app.schemas import response
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 class LLMRecommender:
 
-    def __init__(self, model="llama3.2:3b"):
+    def __init__(self, model="llama-3.3-70b-versatile"):
+        self.client = Groq(
+            api_key=os.getenv("GROQ_API_KEY")
+        )
         self.model = model
+
     def recommend(self, query, assessments):
+
         prompt = f"""
 You are an SHL assessment recommendation assistant.
 
-Below is the conversation with the recruiter.
+You MUST ONLY recommend assessments from the provided catalog.
 
 Conversation:
 {query}
 
-Recommended SHL assessments:
+Available Assessments:
 {assessments}
 
-For each assessment:
+Instructions:
 
-- explain why it matches the hiring need
-- mention the skills evaluated
-- keep the explanation concise
-- do not invent assessments
-- only use the assessments provided
+- Recommend only assessments listed above.
+- Explain briefly why each matches.
+- Mention the skills evaluated.
+- Never invent assessment names.
+- Keep the answer concise and professional.
 """
-        response = ollama.chat(
+
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {
                     "role": "user",
                     "content": prompt
                 }
-            ]
+            ],
+            temperature=0.2,
         )
-        return response["message"]["content"]
-    
+
+        return response.choices[0].message.content
+
     def compare(self, question, assessments):
 
         prompt = f"""
-You are an SHL consultant.
+You are an SHL assessment consultant.
 
 Question:
 
 {question}
 
-Products
+Assessments:
 
 {assessments}
 
-Compare these products.
+Compare ONLY the assessments provided.
 
-Explain:
+Include:
 
-- purpose
-- what each measures
-- when to choose each
-- differences
+- Purpose
+- Skills measured
+- Differences
+- When each should be chosen
 
-Keep it concise.
+Keep the comparison concise.
 """
 
-        response = ollama.chat(
+        response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {
-                    "role":"user",
-                    "content":prompt
+                    "role": "user",
+                    "content": prompt
                 }
-            ]
+            ],
+            temperature=0.2,
         )
 
-        return response["message"]["content"]
+        return response.choices[0].message.content
